@@ -11,12 +11,13 @@ IBTIM	EQU	106	; Whole Bit
 
 
 START:	LXI SP,2080h   ; Initialize stack pointer
-	LXI H, 2800h	; We will use HL for pointer
+LOOP:	LXI H, 2800h	; We will use HL for pointer
 			; Furthermore we will limit rw to the
 			; 28xxh address space by only reading on byte
 			; of address and one of data
 
-LOOP:	CALL CI		; Get address byte
+	NOP
+	CALL CI		; Get address byte
 	MOV L,A		; Put in low order address byte of pointer
 	CALL CI		; Get data byte
 	MOV M,A
