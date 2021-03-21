@@ -1,23 +1,23 @@
 ; 110 Baud = bit time 1152
 ; We will use 1200 baud = bit time 106
+; This bootloader useis 16-bit addressing`
+; It expects 16 bits of address followed by 8 bits of data
 
 
 UPDDT	EQU	036Eh	; A register to data display
 DELAY   EQU     05F1h   ; Counts down 16-bit DE register pair
 WAIT	EQU	53	; Half Bit
 IBTIM	EQU	106	; Whole Bit
+SSP	EQU	LI+8	; Stack initiatized as 8 past last instruction
 
 	ORG 2000h
 
 
-START:	LXI SP,2080h   ; Initialize stack pointer
-LOOP:	LXI H, 2800h	; We will use HL for pointer
-			; Furthermore we will limit rw to the
-			; 28xxh address space by only reading on byte
-			; of address and one of data
+START:	LXI SP,SSP   ; Initialize stack pointer
 
-	NOP
-	CALL CI		; Get address byte
+LOOP:	CALL CI		; Get high order address byte
+	MOV H,A		; Put in high order address byte of pointer
+	CALL CI		; Get low order address byte
 	MOV L,A		; Put in low order address byte of pointer
 	CALL CI		; Get data byte
 	MOV M,A
@@ -30,8 +30,8 @@ CI05:	RIM		; READ SID
 	JC CI05		; Wait for start bit
 	LXI D, WAIT	; Delay half bit
 	CALL DELAY	
-	LXI B, 8	; Count 8 bits
-CI10:	LXI D, IBTIM	; Wait 1 bit
+	MVI C, 8  	; Count 8 bits, no need to initiatize B
+CI10:	MVI E, IBTIM	; Wait 1 bit - 8 bits - fits into E only
 	CALL DELAY
 	RIM		; Read SID
 	RAL		; Shift into carry flag
@@ -41,6 +41,6 @@ CI10:	LXI D, IBTIM	; Wait 1 bit
 	DCR C		; Decrement bit count
 	JNZ CI10	; Still more bits to get
 	MOV A,B		; Move byte to A
-	RET
+LI:	RET
 
 
